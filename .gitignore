@@ -1,5 +1,6 @@
 # model
 pytorch_resnet.pt
+test_main.http
 
 # fastapi
 .idea
