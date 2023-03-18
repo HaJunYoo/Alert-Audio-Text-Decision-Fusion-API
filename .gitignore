@@ -2,6 +2,9 @@
 pytorch_resnet.pt
 test_main.http
 
+# S3
+.env
+
 # fastapi
 .idea
 .ipynb_checkpoints

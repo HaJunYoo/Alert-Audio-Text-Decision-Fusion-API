@@ -1,34 +1,33 @@
 import librosa
 import numpy as np
-import torch
-from resnet import ResNetModel
 
+import os
+from dotenv import load_dotenv
 
-from fastapi import FastAPI, File, UploadFile, Request
+from fastapi import FastAPI, File, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette import status
+
+import boto3
+from botocore.exceptions import ClientError
+
+import torch
+# from resnet import ResNetModel
+from resnet import model, label_names, device
+
+
+# Load the .env file
+load_dotenv()
+s3 = boto3.client('s3')
+bucket_name = os.environ.get("BUCKET_NAME")
+# print(bucket_name)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Define the path to the saved model
-model_path = './resnet-model/pytorch_resnet.pt'
-
-# Load the saved model
-checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-model = ResNetModel(num_classes=6)
-model.load_state_dict(checkpoint['model_state_dict'])
-
-# Define the device
-device = torch.device('mps:0' if torch.backends.mps.is_available() else 'cpu')
-
-# Move the model to the device
-model.to(device)
-
-# Define label names
-label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
 
 def audio_predict(audio_data, sr, model):
 
@@ -67,6 +66,68 @@ def audio_predict(audio_data, sr, model):
     return label_names[int(label_index)], probabilities.detach().cpu().numpy()[0]
 
 
+# boto3
+@app.post("/predict")
+async def predict(audio_file: UploadFile = File(...)):
+    # boto3
+    # 현재는 업로드한 파일을 받아오지만 S3 버켓 주소를 받아다가 prediction을 수행하는 코드를 짜야함
+    # 업로드한 S3 주소를 받아옴
+
+    # Save the uploaded file to the static folder
+    file_location = f"static/{audio_file.filename}"
+    with open(file_location, "wb+") as file_object:
+        file_object.write(audio_file.file.read())
+    # s3에 저장이 되는 순간?
+
+    print(audio_file.filename)
+
+    # Load the audio data in the static and resample it to the desired sampling rate
+    audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
+
+    # Predict the label and probabilities for the loaded audio
+    label, probabilities = audio_predict(audio_data, sr, model)
+
+    ## if alert: sagemaker text endpoint or multi model
+
+    # print(label)
+    # print(probabilities)
+
+    return {"result": "success", "label": label, "probabilities": probabilities.tolist()}
+
+
+# S3 predict using boto3
+@app.post("/s3predict")
+async def s3predict(request: Request):
+    # Download the S3 file to a temporary location on the server
+    s3_key = await request.form()
+    s3_key = s3_key['s3_key']
+    print(s3_key)
+
+    file_location = "static/temp_file.wav"
+
+    if not s3_key:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="S3 URI is required."
+        )
+    try:
+        s3.download_file(Bucket=bucket_name, Key=s3_key, Filename=file_location)
+    except ClientError as e:
+        print(e)
+        return {"result": "error", "message": "Failed to download file from S3."}
+
+    # Load the audio data in the temporary file and resample it to the desired sampling rate
+    audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
+
+    # Predict the label and probabilities for the loaded audio
+    label, probabilities = audio_predict(audio_data, sr, model)
+
+    # Delete the temporary file
+    os.remove(file_location)
+
+    return {"result": "success", "label": label, "probabilities": probabilities.tolist()}
+
+
 @app.get("/")
 async def home():
     return {"message": "Welcome to the audio classifier homepage!"}
@@ -76,23 +137,5 @@ async def home():
 async def upload(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
-
-@app.post("/predict")
-async def predict(audio_file: UploadFile = File(...)):
-    # Save the uploaded file to the static folder
-    file_location = f"static/{audio_file.filename}"
-    with open(file_location, "wb+") as file_object:
-        file_object.write(audio_file.file.read())
-
-    print(audio_file.filename)
-
-    # Load the audio data in the static and resample it to the desired sampling rate
-    audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
-
-    # Predict the label and probabilities for the loaded audio
-    label, probabilities = audio_predict(audio_data, sr, model)
-    print(label)
-    print(probabilities)
-
-    return {"result": "success", "label": label, "probabilities": probabilities.tolist()}
+# uvicorn main:app --reload
 
