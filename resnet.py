@@ -1,5 +1,9 @@
 import torch
 import torch.nn as nn
+
+import librosa
+import numpy as np
+
 from torchvision.models.resnet import ResNet, BasicBlock
 
 
@@ -39,3 +43,40 @@ model.load_state_dict(checkpoint['model_state_dict'])
 
 # Define label names
 label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+
+
+def audio_predict(audio_data, sr, model):
+
+    # Calculate the spectrogram of the audio data
+    spec = librosa.feature.melspectrogram(y=audio_data, sr=sr)
+
+    # Convert the spectrogram to decibels
+    spec_db = librosa.power_to_db(spec, ref=np.max)
+
+    # Add an additional channel to the spectrogram
+    spec_db = np.repeat(spec_db[:, :, np.newaxis], 4, axis=2)
+
+    # Resize the spectrogram to match the input shape of the model
+    spec_resized = np.resize(spec_db, (1, 4, 128, 128))
+
+    # Normalize the spectrogram by z-score
+    mean = np.mean(spec_resized)
+    std = np.std(spec_resized)
+    spec_resized = (spec_resized - mean) / std
+
+    # Convert the spectrogram to a tensor and move it to the device
+    spectrogram_tensor = torch.tensor(spec_resized, dtype=torch.float).to(device)
+
+    # Set the model to evaluation mode
+    model.eval()
+
+    # Predict the probabilities for each class
+    with torch.no_grad():
+        probabilities = model(spectrogram_tensor)
+
+    # Get the index of the class with the highest probability
+    predicted_class_index = torch.argmax(probabilities, dim=1)
+
+    label_index = predicted_class_index.item()
+
+    return label_names[int(label_index)], probabilities.detach().cpu().numpy()[0]

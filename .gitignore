@@ -1,7 +1,13 @@
 # model
 pytorch_resnet.pt
+kobert_model_3.pt
+KoBERT/*
+kobert_tokenizer
+.cache
 
 test_main.http
+candidate.py
+app.py
 
 # S3
 .env

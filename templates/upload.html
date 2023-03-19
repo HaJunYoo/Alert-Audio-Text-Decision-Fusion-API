@@ -5,19 +5,35 @@
   </head>
   <body>
     <h1>File Upload</h1>
-    <form action="/predict" method="post" enctype="multipart/form-data">
-      <input type="file" name="audio_file">
-      <input type="submit" value="Predict">
-      <br>
-    </form>
+
+  <form action="/predict" method="post" enctype="multipart/form-data">
+    <label for="audio_file">Audio file:</label>
+    <input type="file" id="audio_file" name="audio_file"><br>
+    <br>
+    <label for="text_input">Text input:</label>
+    <input type="text" id="text_input" name="text_input"><br>
+
+    <input type="submit" value="Predict">
+  </form>
 
     <br>
+    <hr>
+    <br>
 
-    <form action="/s3predict" method="post">
-      <input type="text" name="s3_key" placeholder="S3 KEY" required>
-      <input type="submit" value="Predict">
-      <br>
-    </form>
+    <h1>S3 File Upload</h1>
+
+  <form action="/s3predict" method="post" enctype="multipart/form-data">
+
+    <label for="audio_file">Audio file:</label>
+    <input type="text" name="s3_key" placeholder="S3 KEY" required> <br>
+
+     <br>
+    <label for="text_input">Text input:</label>
+    <input type="text" name="text_input_s3" placeholder="S3 audio file text" required><br>
+
+    <input type="submit" value="Predict">
+    <br>
+  </form>
 
   </body>
 </html>
