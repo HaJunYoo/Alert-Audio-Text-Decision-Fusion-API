@@ -5,7 +5,15 @@ Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+GET http://127.0.0.1:8000/upload
 Accept: application/json
 
 ###
+
+POST http://127.0.0.1:8000/predict
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/s3predict
+Accept: application/json

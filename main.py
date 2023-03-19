@@ -66,18 +66,14 @@ def audio_predict(audio_data, sr, model):
     return label_names[int(label_index)], probabilities.detach().cpu().numpy()[0]
 
 
-# boto3
+# using static folder
 @app.post("/predict")
 async def predict(audio_file: UploadFile = File(...)):
-    # boto3
-    # 현재는 업로드한 파일을 받아오지만 S3 버켓 주소를 받아다가 prediction을 수행하는 코드를 짜야함
-    # 업로드한 S3 주소를 받아옴
 
     # Save the uploaded file to the static folder
     file_location = f"static/{audio_file.filename}"
     with open(file_location, "wb+") as file_object:
         file_object.write(audio_file.file.read())
-    # s3에 저장이 되는 순간?
 
     print(audio_file.filename)
 
@@ -96,6 +92,9 @@ async def predict(audio_file: UploadFile = File(...)):
 
 
 # S3 predict using boto3
+# boto3
+# 현재는 업로드한 파일을 받아오지만 S3 버켓 주소를 받아다가 prediction을 수행하는 코드를 짜야함
+# 업로드한 S3 주소를 받아옴
 @app.post("/s3predict")
 async def s3predict(request: Request):
     # Download the S3 file to a temporary location on the server

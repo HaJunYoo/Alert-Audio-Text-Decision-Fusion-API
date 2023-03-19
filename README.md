@@ -5,11 +5,15 @@
 - 사용 모델 : resnet
 - 사용 언어 : python
 - 사용 대표 라이브러리 : librosa, numpy, pytorch, fastapi, jinja2, boto3
+
 <br>
+
 - resnet을 이용하여 응급 음성을 분류하는 프로젝트입니다. <br>
 - FastAPI를 이용하여 API를 만들었습니다.
+
 <br>
 <br>
+
 - upload.html
   - jinja2를 이용하여 html을 만들었습니다.<br>
   - upload 버튼을 누르면 음성 파일을 업로드 할 수 있습니다.
@@ -17,6 +21,7 @@
   - 2가지 옵션을 선택할 수 있습니다.<br>
     - 음성 파일을 직접 업로드(wav)
     - 음성 파일을 S3에서 가져오기(s3_key)
+
 <br>
 <br>
     
@@ -30,6 +35,7 @@
   - 마지막으로 클래스 라벨의 이름을 정의하는데 사용됩니다.
 
 <br>
+
 ## 2. 프로젝트 실행 방법
 
 - 음성파일은 static 폴더에 저장됩니다.<br>
@@ -45,3 +51,11 @@
   - /predict_s3
     - 음성 파일을 분류합니다.
     - S3에 저장된 음성 파일의 S3 URI를 받아와서 해당 파일을 다운로드한 후 분류 모델로 예측을 수행하고, 예측 결과인 라벨과 확률값을 반환하는 FastAPI 엔드포인트입니다.
+
+## 3. 프로젝트 구조
+
+- 프로젝트 최종 구조
+  
+    ![architectures](test_data/아키텍처.png "architectures")
+
+- sagemaker endpoint 제작 예정

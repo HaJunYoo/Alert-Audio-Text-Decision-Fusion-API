@@ -24,17 +24,18 @@ class ResNetModel(ResNet):
         x = self.fc(x)
         return x
 
-
+# Define the device
+# device = torch.device('mps:0' if torch.backends.mps.is_available() else 'cpu')
+device = torch.device('cpu')
 # Define the path to the saved model
 model_path = './resnet-model/pytorch_resnet.pt'
 # Load the saved model
 checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
 model = ResNetModel(num_classes=6)
 model.load_state_dict(checkpoint['model_state_dict'])
-# Define the device
-device = torch.device('mps:0' if torch.backends.mps.is_available() else 'cpu')
-# Move the model to the device
-model.to(device)
+
+# # Move the model to the device
+# model.to(device)
 
 # Define label names
 label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
