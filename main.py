@@ -27,6 +27,21 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+def scale_to_range(arr, target_range=(0, 20)):
+    # Calculate exponential values for each element
+    exp_arr = np.exp(arr)
+
+    # Calculate the sum of all exponential values
+    exp_sum = np.sum(exp_arr)
+
+    # Calculate probability for each element by dividing its exponential value by the sum
+    probs = exp_arr / exp_sum
+
+    # Scale probabilities to target range
+    scaled = (probs * (target_range[1] - target_range[0])) + target_range[0]
+
+    return scaled
+
 
 # using static folder
 @app.post("/predict")
@@ -45,38 +60,56 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
     # Predict the label and probabilities for the loaded audio
     audio_label, a_probabilities = audio_predict(audio_data, sr)
 
-    # youtube-help.wav text
-    # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
-    # text input
-    # start = time.time()
-    text = text_input
-    print(text)
+    scaled_a_probabilities = scale_to_range(a_probabilities)
 
-    from kobert_model import text_predict
-    text_label, t_probabilities = text_predict(text)
-    # end = time.time() - start
-    # print(f'{end} seconds')
+    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
 
-    # Combine audio and text probabilities with weight
-    combined_prob = 0.4 * t_probabilities + 0.6 * a_probabilities
+        end = time.time() - start
+        print(f'{end} seconds')
 
-    # Predict label using argmax
-    total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+        return {
+            "result": "success",
+            "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
+            "text_label": "regular", "text_probabilities": [20, 0, 0, 0, 0, 0],
+            "combined_label": "regular", "combined_probabilities": [20, 0, 0, 0, 0, 0]
+        }
 
-    label_index = np.argmax(combined_prob)
+    else:
+        # youtube-help.wav text
+        # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
+        # text input
 
-    print(total_label_names[int(label_index)])
+        text = text_input
+        # print(text)
 
-    concate_label = total_label_names[int(label_index)]
+        from kobert_model import text_predict
+        text_label, t_probabilities = text_predict(text)
 
-    end = time.time() - start
-    print(f'{end} seconds')
-    # Return the label and probabilities
-    return {
-        "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-        "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
-        "combined_label": concate_label, "combined_probabilities": combined_prob.tolist()
-    }
+        scaled_t_probabilities = scale_to_range(t_probabilities)
+
+        # Combine audio and text probabilities with weight
+        combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
+
+        # Predict label using argmax
+        total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+
+        label_index = np.argmax(combined_prob)
+
+        print(total_label_names[int(label_index)])
+
+        concate_label = total_label_names[int(label_index)]
+
+        end = time.time() - start
+        print(f'{end} seconds')
+
+        # Return the label and probabilities
+        return {
+            "result": "success",
+            "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
+            "text_label": text_label, "text_probabilities": scaled_t_probabilities.tolist(),
+            "combined_label": concate_label, "combined_probabilities": combined_prob.tolist()
+        }
+
 
 
 # S3 predict using boto3
@@ -115,6 +148,8 @@ async def s3predict(request: Request):
     # Predict the label and probabilities for the loaded audio
     audio_label, a_probabilities = audio_predict(audio_data, sr)
 
+    scaled_a_probabilities = scale_to_range(a_probabilities)
+
     # Delete the temporary file
     os.remove(file_location)
 
@@ -124,7 +159,7 @@ async def s3predict(request: Request):
         print(f'{end} seconds')
 
         return {
-            "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+            "result": "success", "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
             "text_label": "regular", "text_probabilities": [1, 0, 0, 0, 0, 0],
             "combined_label": "regular", "combined_probabilities": [1, 0, 0, 0, 0, 0]
         }
@@ -132,16 +167,16 @@ async def s3predict(request: Request):
     else:
         # youtube-help.wav text
         # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
-        # text input
-
         text = s3_text
         # print(text)
 
         from kobert_model import text_predict
         text_label, t_probabilities = text_predict(text)
 
+        scaled_t_probabilities = scale_to_range(t_probabilities)
+
         # Combine audio and text probabilities with weight
-        combined_prob = 0.4 * t_probabilities + 0.6 * a_probabilities
+        combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
 
         # Predict label using argmax
         total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
