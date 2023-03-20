@@ -8,17 +8,10 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
 from transformers import AutoTokenizer
-from kobert import get_pytorch_kobert_model
+from kobert.pytorch_kobert import get_pytorch_kobert_model
+from kobert.utils import get_tokenizer
 
-device = torch.device('cpu')
-
-# Setting prediction parameters
-max_len = 60
-batch_size = 64
-learning_rate = 5e-5
-
-# Load pre-trained model (weights)
-bertmodel, vocab = get_pytorch_kobert_model()
+import time
 
 
 # BERT 모델, Vocabulary 불러오기
@@ -69,54 +62,63 @@ class BERTDataset(Dataset):
         return (len(self.labels))
 
 
+device = torch.device('cpu')
+
+# Setting prediction parameters
+max_len = 60
+batch_size = 64
+learning_rate = 5e-5
+
+print("Loading BERT model...")
+# Load pre-trained model (weights)
+bertmodel, vocab = get_pytorch_kobert_model()
+
 # Load tokenizer from a local directory
-kobert_tokenizer = AutoTokenizer.from_pretrained("kobert_tokenizer", use_fast=False)
-tok = kobert_tokenizer.tokenize
+# kobert_tokenizer = AutoTokenizer.from_pretrained("kobert_tokenizer", use_fast=False)
+# tok = kobert_tokenizer.tokenize
+print("Loading BERT tokenizer...")
+tokenizer = get_tokenizer()
+tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
 
 PATH = './KoBERT/'
 kobert_model = BERTClassifier(bertmodel, dr_rate=0.5)
-
 kobert_model.load_state_dict(torch.load(PATH + 'model_state_dict.pt', map_location=device))
 
 
-def text_predict(predict_sentence):
-    data = [predict_sentence, '0']
-    dataset_another = [data]
+def softmax(vals, idx):
+    valscpu = vals.cpu().detach().squeeze(0)
+    a = 0
+    for i in valscpu:
+        a += np.exp(i)
+    return ((np.exp(valscpu[idx])) / a).item() * 100
 
-    another_test = BERTDataset(dataset_another, 0, 1, tok, vocab, max_len, True, False)
-    test_dataloader = torch.utils.data.DataLoader(another_test, batch_size=batch_size, num_workers=5)
 
-    kobert_model.eval()
+def text_predict(predict_sentence, model=kobert_model):
+    print("predictsentence start:", predict_sentence)
+    start = time.time()
+    text_label = ["정상", "도움요청", "강도범죄", "강제추행(성범죄)", "절도범죄", "폭력범죄"]
+    data = [predict_sentence]
+    # dataset_another = [data]
 
-    for batch_id, (token_ids, valid_length, segment_ids, label) in enumerate(test_dataloader):
-        token_ids = token_ids.long().to(device)
-        segment_ids = segment_ids.long().to(device)
+    transform = nlp.data.BERTSentenceTransform(tok, max_len, pad=True, pair=False)
+    tokenized = transform(data)
+    model.eval()
 
-        valid_length = valid_length
-        label = label.long().to(device)
+    # print([tokenized[0]])
+    # token_ids = torch.tensor([tokenized[0]]).to(device)
+    # segment_ids = torch.tensor([tokenized[2]]).to(device)
+    token_ids = torch.tensor(np.array([tokenized[0]])).to(device)
+    valid_length = [tokenized[1]]
+    segment_ids = torch.tensor(np.array([tokenized[2]])).to(device)
 
-        out = kobert_model(token_ids, valid_length, segment_ids)
-
-        test_eval = []
-        logit_list = []
-        for i in out:
-            logits = i
-            logits = logits.detach().cpu().numpy()
-            logit_list.append(logits)
-
-            # label_encoder = {"정상": 0, "도움요청": 1, "강도범죄": 2, "강제추행(성범죄)": 3, "절도범죄": 4, "폭력범죄":5}
-            if np.argmax(logits) == 0:
-                test_eval.append("정상")
-            elif np.argmax(logits) == 1:
-                test_eval.append("도움요청")
-            elif np.argmax(logits) == 2:
-                test_eval.append("강도범죄")
-            elif np.argmax(logits) == 3:
-                test_eval.append("강제추행(성범죄)")
-            elif np.argmax(logits) == 4:
-                test_eval.append("절도범죄")
-            elif np.argmax(logits) == 5:
-                test_eval.append("폭력범죄")
-
-        # print(">> 입력하신 내용은 " + test_eval[0])
-        return test_eval[0], logit_list[0]
+    result = model(token_ids, valid_length, segment_ids)
+    # print(result)
+    idx = result.argmax().cpu().item()
+    out_prob = result.detach().cpu().numpy()[0]
+    print(out_prob)
+    # print(out_prob)
+    print("대사의 카테고리는:", text_label[idx])
+    print("대사 신뢰도는:", "{:.2f}%".format(softmax(result, idx)))
+    end = time.time() - start
+    print("text predict 걸린 시간:", end)
+    return text_label[idx], out_prob

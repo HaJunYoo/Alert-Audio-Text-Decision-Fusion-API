@@ -35,17 +35,24 @@ device = torch.device('cpu')
 model_path = './resnet-model/pytorch_resnet.pt'
 # Load the saved model
 checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-model = ResNetModel(num_classes=6)
-model.load_state_dict(checkpoint['model_state_dict'])
+resnet_model = ResNetModel(num_classes=6)
+resnet_model.load_state_dict(checkpoint['model_state_dict'])
 
 # # Move the model to the device
 # model.to(device)
 
-# Define label names
-label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+
+def softmax(vals, idx):
+    valscpu = vals.cpu().detach().squeeze(0)
+    a = 0
+    for i in valscpu:
+        a += np.exp(i)
+    return ((np.exp(valscpu[idx]))/a).item() * 100
 
 
-def audio_predict(audio_data, sr, model):
+def audio_predict(audio_data, sr, model = resnet_model):
+    # Define label names
+    label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
 
     # Calculate the spectrogram of the audio data
     spec = librosa.feature.melspectrogram(y=audio_data, sr=sr)
@@ -72,11 +79,14 @@ def audio_predict(audio_data, sr, model):
 
     # Predict the probabilities for each class
     with torch.no_grad():
-        probabilities = model(spectrogram_tensor)
+        out = model(spectrogram_tensor)
 
     # Get the index of the class with the highest probability
-    predicted_class_index = torch.argmax(probabilities, dim=1)
+    predicted_class_index = torch.argmax(out, dim=1)
 
     label_index = predicted_class_index.item()
 
-    return label_names[int(label_index)], probabilities.detach().cpu().numpy()[0]
+    print("음성의 카테고리는:", label_names[label_index])
+    print("음성 신뢰도는:", "{:.2f}%".format(softmax(out, label_index)))
+
+    return label_names[int(label_index)], out.detach().cpu().numpy()[0]
