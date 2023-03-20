@@ -27,6 +27,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+
 def scale_to_range(arr, target_range=(0, 20)):
     # Calculate exponential values for each element
     exp_arr = np.exp(arr)
@@ -62,7 +63,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
     scaled_a_probabilities = scale_to_range(a_probabilities)
 
-    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
+    if audio_label not in ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']:
 
         end = time.time() - start
         print(f'{end} seconds')
@@ -111,7 +112,6 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
         }
 
 
-
 # S3 predict using boto3
 # boto3
 # 현재는 업로드한 파일을 받아오지만 S3 버켓 주소를 받아다가 prediction을 수행하는 코드를 짜야함
@@ -124,10 +124,10 @@ async def s3predict(request: Request):
     print(s3_context)
 
     s3_key = s3_context['s3_key']
-    print(s3_key) # audiofile/youtube-help.wav
+    print(s3_key)  # audiofile/youtube-help.wav
 
     s3_text = s3_context['text_input_s3']
-    print(s3_text) # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
+    print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
 
     file_location = "static/temp_file.wav"
 
@@ -153,7 +153,7 @@ async def s3predict(request: Request):
     # Delete the temporary file
     os.remove(file_location)
 
-    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
+    if audio_label not in ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']:
 
         end = time.time() - start
         print(f'{end} seconds')
@@ -196,7 +196,6 @@ async def s3predict(request: Request):
             "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
             "combined_label": concate_label, "combined_probabilities": combined_prob.tolist()
         }
-
 
 
 @app.get("/")

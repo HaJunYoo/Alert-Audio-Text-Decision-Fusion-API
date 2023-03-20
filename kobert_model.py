@@ -96,7 +96,7 @@ def softmax(vals, idx):
 def text_predict(predict_sentence, model=kobert_model):
     print("predictsentence start:", predict_sentence)
     start = time.time()
-    text_label = ["정상", "도움요청", "강도범죄", "강제추행(성범죄)", "절도범죄", "폭력범죄"]
+    text_label = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
     data = [predict_sentence]
     # dataset_another = [data]
 
@@ -115,7 +115,6 @@ def text_predict(predict_sentence, model=kobert_model):
     # print(result)
     idx = result.argmax().cpu().item()
     out_prob = result.detach().cpu().numpy()[0]
-    print(out_prob)
     # print(out_prob)
     print("대사의 카테고리는:", text_label[idx])
     print("대사 신뢰도는:", "{:.2f}%".format(softmax(result, idx)))
