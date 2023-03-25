@@ -63,7 +63,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
     scaled_a_probabilities = scale_to_range(a_probabilities)
 
-    if audio_label not in ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']:
+    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
 
         end = time.time() - start
         print(f'{end} seconds')
@@ -90,6 +90,9 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         # Combine audio and text probabilities with weight
         combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
+
+        # make here as a dense or classfying ml layer, simple ml model. -> decision fusion
+
 
         # Predict label using argmax
         total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
