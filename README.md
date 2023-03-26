@@ -65,7 +65,9 @@
   - /predict_s3
     - 음성 파일을 분류합니다.
     - S3에 저장된 음성 파일의 S3 URI를 받아와서 해당 파일을 다운로드한 후 분류 모델로 예측을 수행하고, 예측 결과인 라벨과 확률값을 반환하는 FastAPI 엔드포인트입니다.
+  - 위의 predict endpoint들은 multi-model 형식으로 inference를 수행 후 반환된 확률값들을 기반하여 Decision Diffusion을 이용하여 최종 결과를 반환합니다.    
 
+<br>
 ## 3. 프로젝트 구조
 
 - 프로젝트 최종 구조
@@ -73,8 +75,9 @@
     ![architectures](test_data/Architecture.png "architectures")
 
 - 각 model은 cpu를 통해 inference를 수행합니다.
-- sagemaker 대신 로컬 혹은 같은 환경에서 2개의 모델이 inference를 수행합니다.
+- sagemaker 대신 로컬 혹은 같은 환경에서 2개의 모델이 multi model 형식으로 inference를 수행합니다.
 - Mac M1 Pro 칩 기준으로 inference time
   - Resnet : 평균 1초 이내
-  - KoBERT : 평균 6초 이내 (모델과 토큰나이저를 cache로 저장하여 사용)
-  - 총 7초가 소요됩니다
+  - KoBERT : 평균 1초 이내 (모델과 토큰나이저를 cache로 저장하여 사용)
+  - Decision Diffusion : 평균 1초 이내 
+  - 총 2초 이내가 소요됩니다
