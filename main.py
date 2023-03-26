@@ -24,7 +24,7 @@ s3 = boto3.client('s3')
 bucket_name = os.environ.get("BUCKET_NAME")
 # print(bucket_name)
 
-label_encoder = {"정상": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual', "절도범죄": 'theft',
+label_encoder = {"실내": 'regular', "실외": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual', "절도범죄": 'theft',
                  "폭력범죄": 'violence'}
 # ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
 
@@ -76,8 +76,8 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
         return {
             "result": "success",
             "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
-            "text_label": "regular", "text_probabilities": [20, 0, 0, 0, 0, 0],
-            "combined_label": "regular", "combined_probabilities": [20, 0, 0, 0, 0, 0]
+            "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
+            "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
         }
 
     else:
@@ -165,7 +165,7 @@ async def s3predict(request: Request):
     # Delete the temporary file
     os.remove(file_location)
 
-    if audio_label not in ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']:
+    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
 
         end = time.time() - start
         print(f'{end} seconds')
