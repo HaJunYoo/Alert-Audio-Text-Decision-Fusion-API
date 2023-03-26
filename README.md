@@ -2,13 +2,13 @@
 
 ## 1. 프로젝트 소개
 
-- 사용 모델 : RESNET, KoBERT
+- 사용 모델 : RESNET, KoBERT, Decision Diffusion(ML)
 - 사용 언어 : python
-- 사용 대표 라이브러리 : librosa, numpy, pytorch, fastapi, jinja2, boto3, kobert
+- 사용 대표 라이브러리 : Apache Airflow, librosa, numpy, pytorch, fastapi, jinja2, boto3, kobert
 - KoBERT 설치는 https://github.com/SKTBrain/KoBERT 참고
 - Local PC : Macbook Pro M1
 - S3 : AWS S3
-- AWS EC2 : 미정
+- AWS EC2 : t2.medium
 
 <br>
 
@@ -71,9 +71,9 @@
 
 ## 3. 프로젝트 구조
 
-- 프로젝트 최종 구조
+- __프로젝트 최종 구조__
   
-    ![architectures](test_data/Architecture.png "architectures"){: width="80%" height="80%"}
+    ![architectures](test_data/Architecture.png "architectures")
 
 
 - 각 model은 cpu를 통해 inference를 수행합니다.
