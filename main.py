@@ -1,5 +1,6 @@
 import librosa
 import numpy as np
+import pandas as pd
 
 import os
 from dotenv import load_dotenv
@@ -23,6 +24,11 @@ s3 = boto3.client('s3')
 bucket_name = os.environ.get("BUCKET_NAME")
 # print(bucket_name)
 
+label_encoder = {"정상": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual', "절도범죄": 'theft',
+                 "폭력범죄": 'violence'}
+# ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -44,7 +50,6 @@ def scale_to_range(arr, target_range=(0, 20)):
     return scaled
 
 
-# using static folder
 @app.post("/predict")
 async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...)):
     start = time.time()
@@ -89,36 +94,34 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         scaled_t_probabilities = scale_to_range(t_probabilities)
 
+        # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
         diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
 
         combined_prob = a_probabilities.tolist()
         combined_prob.extend(t_probabilities.tolist())
 
-        combined_prob = np.array(combined_prob).reshape(1, -1)
+        combined_prob_2 = [combined_prob]
 
-        concate_label = diffusion_model.predict(combined_prob)
+        print(combined_prob_2)
 
-        # Combine audio and text probabilities with weight
-        # combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
-
-        # make here as a dense or classfying ml layer, simple ml model. -> decision fusion
-
-        # Predict label using argmax
-        # total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
-        # label_index = np.argmax(combined_prob)
-        # print(total_label_names[int(label_index)])
-        # concate_label = total_label_names[int(label_index)]
+        concate_label = diffusion_model.predict(combined_prob_2)
+        result_label = label_encoder[concate_label[0]]
+        print(result_label)
 
         end = time.time() - start
         print(f'{end} seconds')
 
         # Return the label and probabilities
+
         return {
             "result": "success",
-            "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
-            "text_label": text_label, "text_probabilities": scaled_t_probabilities.tolist(),
-            "combined_label": concate_label, "combined_probabilities": combined_prob.tolist()
+            "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+            "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
+            "combined_label": result_label, "combined_probabilities": combined_prob
         }
+    # tolist() 메서드를 사용하여 NumPy 배열을 리스트로 변환하는 등, 쉽게 직렬화할 수 있는 형식으로 관련 데이터 유형을 변환합니다.
+    # 이렇게 하면 FastAPI의 jsonable_encoder를 사용할 때 발생했던 ValueError와 TypeError를 해결할 수 있습니다.
+
 
 
 # S3 predict using boto3
@@ -157,7 +160,7 @@ async def s3predict(request: Request):
     # Predict the label and probabilities for the loaded audio
     audio_label, a_probabilities = audio_predict(audio_data, sr)
 
-    scaled_a_probabilities = scale_to_range(a_probabilities)
+    # scaled_a_probabilities = scale_to_range(a_probabilities)
 
     # Delete the temporary file
     os.remove(file_location)
@@ -168,9 +171,9 @@ async def s3predict(request: Request):
         print(f'{end} seconds')
 
         return {
-            "result": "success", "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
-            "text_label": "regular", "text_probabilities": [1, 0, 0, 0, 0, 0],
-            "combined_label": "regular", "combined_probabilities": [1, 0, 0, 0, 0, 0]
+            "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+            "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
+            "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
         }
 
     else:
@@ -180,30 +183,38 @@ async def s3predict(request: Request):
         # print(text)
 
         from kobert_model import text_predict
+        import pickle
         text_label, t_probabilities = text_predict(text)
 
-        scaled_t_probabilities = scale_to_range(t_probabilities)
+        # scaled_t_probabilities = scale_to_range(t_probabilities)
 
-        # Combine audio and text probabilities with weight
-        combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
+        # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
+        diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
 
-        # Predict label using argmax
-        total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+        combined_prob = a_probabilities.tolist()
+        combined_prob.extend(t_probabilities.tolist())
 
-        label_index = np.argmax(combined_prob)
+        # combined_prob = np.array(combined_prob).reshape(1, -1)
 
-        print(total_label_names[int(label_index)])
+        combined_prob_2 = [combined_prob]
 
-        concate_label = total_label_names[int(label_index)]
+        print(combined_prob_2)
+
+        concate_label = diffusion_model.predict(combined_prob_2)
+        result_label = label_encoder[concate_label[0]]
+        print(result_label)
+
 
         end = time.time() - start
         print(f'{end} seconds')
 
         # Return the label and probabilities
+
         return {
-            "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+            "result": "success",
+            "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
             "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
-            "combined_label": concate_label, "combined_probabilities": combined_prob.tolist()
+            "combined_label": result_label, "combined_probabilities": combined_prob
         }
 
 
