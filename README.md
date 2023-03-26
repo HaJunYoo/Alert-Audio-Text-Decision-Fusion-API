@@ -68,11 +68,13 @@
   - 위의 predict endpoint들은 multi-model 형식으로 inference를 수행 후 반환된 확률값들을 기반하여 Decision Diffusion을 이용하여 최종 결과를 반환합니다.    
 
 <br>
+
 ## 3. 프로젝트 구조
 
 - 프로젝트 최종 구조
   
-    ![architectures](test_data/Architecture.png "architectures")
+    ![architectures](test_data/Architecture.png "architectures"){: width="80%" height="80%"}
+
 
 - 각 model은 cpu를 통해 inference를 수행합니다.
 - sagemaker 대신 로컬 혹은 같은 환경에서 2개의 모델이 multi model 형식으로 inference를 수행합니다.
