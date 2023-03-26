@@ -15,6 +15,7 @@ Diffusion/audio_text_diffusion_train.csv
 Diffusion/audio_text_diffusion_test.csv
 Diffusion/audio_text_label.csv
 Diffusion/requirements.txt
+Diffusion/result_probability.csv
 
 test_main.http
 candidate.py
