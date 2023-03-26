@@ -22,6 +22,7 @@
   - API를 테스트하기 위해 만든 html 파일입니다.<br>
     - jinja2를 이용하여 html을 만들었습니다.<br>
     - upload 버튼을 누르면 음성 파일을 업로드 할 수 있습니다.
+    - 파일의 용량은 1mb 이하로 제한하였습니다.
     - 음성 파일을 업로드하면 음성 파일을 분류합니다.<br>
     - 2가지 옵션을 선택할 수 있습니다.<br>
       - 음성 파일을 직접 업로드(wav)
@@ -73,12 +74,12 @@
 
 - __프로젝트 최종 구조__
   
-    ![architectures](test_data/Architecture.png "architectures")
+    ![architectures](./Architecture.png "architectures")
 
 
 - 각 model은 cpu를 통해 inference를 수행합니다.
 - sagemaker 대신 로컬 혹은 같은 환경에서 2개의 모델이 multi model 형식으로 inference를 수행합니다.
-- Mac M1 Pro 칩 기준으로 inference time
+- EC2 t2.medium 기준으로 소요되는 inference time
   - Resnet : 평균 1초 이내
   - KoBERT : 평균 1초 이내 (모델과 토큰나이저를 cache로 저장하여 사용)
   - Decision Diffusion : 평균 1초 이내 

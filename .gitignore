@@ -5,6 +5,9 @@ KoBERT/*
 kobert_tokenizer
 .cache
 
+static/*
+test_data/*
+
 Diffusion/.cache
 Diffusion/.ipynb_checkpoints
 Diffusion/.pytest_cache
