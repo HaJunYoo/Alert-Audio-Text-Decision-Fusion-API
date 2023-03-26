@@ -84,24 +84,30 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
         # print(text)
 
         from kobert_model import text_predict
+        import pickle
         text_label, t_probabilities = text_predict(text)
 
         scaled_t_probabilities = scale_to_range(t_probabilities)
 
+        diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
+
+        combined_prob = a_probabilities.tolist()
+        combined_prob.extend(t_probabilities.tolist())
+
+        combined_prob = np.array(combined_prob).reshape(1, -1)
+
+        concate_label = diffusion_model.predict(combined_prob)
+
         # Combine audio and text probabilities with weight
-        combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
+        # combined_prob = 0.4 * scaled_t_probabilities + 0.6 * scaled_a_probabilities
 
         # make here as a dense or classfying ml layer, simple ml model. -> decision fusion
 
-
         # Predict label using argmax
-        total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
-
-        label_index = np.argmax(combined_prob)
-
-        print(total_label_names[int(label_index)])
-
-        concate_label = total_label_names[int(label_index)]
+        # total_label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
+        # label_index = np.argmax(combined_prob)
+        # print(total_label_names[int(label_index)])
+        # concate_label = total_label_names[int(label_index)]
 
         end = time.time() - start
         print(f'{end} seconds')
