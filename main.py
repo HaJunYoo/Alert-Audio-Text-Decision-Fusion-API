@@ -138,13 +138,14 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 # 업로드한 S3 주소를 받아서 음성 파일을 다운로드 받아서 prediction을 수행
 @app.post("/s3predict")
 async def s3predict(request: Request):
-    try:
+
         start = time.time()
 
         # Download the S3 file to a temporary location on the server
         s3_context = await request.form()
         print(s3_context)
 
+        # key error to 400 error
         try:
             s3_key = s3_context['s3_key']
             print(s3_key)  # Audio/youtube-help.wav
@@ -172,71 +173,73 @@ async def s3predict(request: Request):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to download file from S3."
             )
+        # prediction error to 500 error
+        try:
+            # Load the audio data in the temporary file and resample it to the desired sampling rate
+            audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
 
-        # Load the audio data in the temporary file and resample it to the desired sampling rate
-        audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
+            # Predict the label and probabilities for the loaded audio
+            audio_label, a_probabilities = audio_predict(audio_data, sr)
 
-        # Predict the label and probabilities for the loaded audio
-        audio_label, a_probabilities = audio_predict(audio_data, sr)
+            # Delete the temporary file
+            os.remove(file_location)
 
-        # Delete the temporary file
-        os.remove(file_location)
+            if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
 
-        if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
+                end = time.time() - start
+                print(f'{end} seconds')
 
-            end = time.time() - start
-            print(f'{end} seconds')
+                return {
+                    "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+                    "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
+                    "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
+                }
 
-            return {
-                "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-                "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
-                "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
-            }
+            else:
+                # youtube-help.wav text
+                # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
+                text = s3_text
+                # print(text)
 
-        else:
-            # youtube-help.wav text
-            # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
-            text = s3_text
-            # print(text)
+                from kobert_model import text_predict
+                import pickle
+                text_label, t_probabilities = text_predict(text)
 
-            from kobert_model import text_predict
-            import pickle
-            text_label, t_probabilities = text_predict(text)
-
-            # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
-            diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
+                # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
+                diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
 
 
-            combined_prob = a_probabilities.tolist()
-            combined_prob.extend(t_probabilities.tolist())
+                combined_prob = a_probabilities.tolist()
+                combined_prob.extend(t_probabilities.tolist())
 
-            combined_prob_2 = [combined_prob]
+                combined_prob_2 = [combined_prob]
 
-            print(combined_prob_2)
+                print(combined_prob_2)
 
-            concate_label = diffusion_model.predict(combined_prob_2)
-            result_label = label_encoder[concate_label[0]]
-            result_prob = diffusion_model.predict_proba(combined_prob_2)
+                concate_label = diffusion_model.predict(combined_prob_2)
+                result_label = label_encoder[concate_label[0]]
+                result_prob = diffusion_model.predict_proba(combined_prob_2)
 
-            print(result_label)
+                print(result_label)
 
-            end = time.time() - start
-            print(f'{end} seconds')
+                end = time.time() - start
+                print(f'{end} seconds')
 
-            # Return the label and probabilities
+                # Return the label and probabilities
 
-            return {
-                "result": "success",
-                "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-                "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
-                "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
-            }
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected internal error occurred. Please try again later."
-        )
+                return {
+                    "result": "success",
+                    "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+                    "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
+                    "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
+                }
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected internal error occurred. Please try again later."
+            )
 
 
 @app.get("/")
