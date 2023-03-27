@@ -24,15 +24,15 @@ access_key = os.environ.get("ACCESS_KEY")
 secret_key = os.environ.get("SECRET_KEY")
 bucket_name = os.environ.get("BUCKET_NAME")
 
-
 s3 = boto3.client('s3',
-                  aws_access_key_id=access_key,
-                  aws_secret_access_key=secret_key
-                  )
+                 aws_access_key_id=access_key,
+                 aws_secret_access_key=secret_key
+                 )
 
 # print(bucket_name)
 
-label_encoder = {"실내": 'regular', "실외": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual', "절도범죄": 'theft',
+label_encoder = {"실내": 'regular', "실외": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual',
+                 "절도범죄": 'theft',
                  "폭력범죄": 'violence'}
 # ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
 
@@ -131,7 +131,6 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
     # 이렇게 하면 FastAPI의 jsonable_encoder를 사용할 때 발생했던 ValueError와 TypeError를 해결할 수 있습니다.
 
 
-
 # S3 predict using boto3
 # boto3
 # 현재는 업로드한 파일을 받아오지만 S3 버켓 주소를 받아다가 prediction을 수행하는 코드를 짜야함
@@ -143,19 +142,30 @@ async def s3predict(request: Request):
     s3_context = await request.form()
     print(s3_context)
 
-    s3_key = s3_context['s3_key']
-    print(s3_key)  # Audio/youtube-help.wav
-
-    s3_text = s3_context['text_input_s3']
-    print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
-
-    file_location = "static/temp_file.wav"
-
-    if not s3_key:
+    try:
+        s3_key = s3_context['s3_key']
+        print(s3_key)  # Audio/youtube-help.wav
+    except:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="S3 URI is required."
         )
+
+    try:
+        s3_text = s3_context['text_input_s3']
+        print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Audio text is required."
+        )
+
+    file_location = "static/temp_file.wav"
+    # if not s3_key:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="S3 URI is required."
+    #     )
     try:
         s3.download_file(Bucket=bucket_name, Key=s3_key, Filename=file_location)
     except ClientError as e:
@@ -211,7 +221,6 @@ async def s3predict(request: Request):
         concate_label = diffusion_model.predict(combined_prob_2)
         result_label = label_encoder[concate_label[0]]
         print(result_label)
-
 
         end = time.time() - start
         print(f'{end} seconds')
