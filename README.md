@@ -82,7 +82,7 @@
 
 - __프로젝트 최종 구조__
 
-  <img src="./Architecture.png"  width="80%" height="80%"/>
+  <img src="./Architecture.png"  width="70%" height="70%"/>
 
 
 - 각 model은 cpu를 통해 inference를 수행합니다.
