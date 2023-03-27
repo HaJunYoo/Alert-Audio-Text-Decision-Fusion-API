@@ -114,6 +114,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         concate_label = diffusion_model.predict(combined_prob_2)
         result_label = label_encoder[concate_label[0]]
+        result_prob = diffusion_model.predict_proba(combined_prob_2)
         print(result_label)
 
         end = time.time() - start
@@ -125,7 +126,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
             "result": "success",
             "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
             "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
-            "combined_label": result_label, "combined_probabilities": combined_prob
+            "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
         }
     # tolist() 메서드를 사용하여 NumPy 배열을 리스트로 변환하는 등, 쉽게 직렬화할 수 있는 형식으로 관련 데이터 유형을 변환합니다.
     # 이렇게 하면 FastAPI의 jsonable_encoder를 사용할 때 발생했던 ValueError와 TypeError를 해결할 수 있습니다.
@@ -133,106 +134,109 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
 # S3 predict using boto3
 # boto3
-# 현재는 업로드한 파일을 받아오지만 S3 버켓 주소를 받아다가 prediction을 수행하는 코드를 짜야함
-# 업로드한 S3 주소를 받아옴
+# S3 버켓 URI와 음성 텍스트를 받아다가 prediction을 수행하는 코드
+# 업로드한 S3 주소를 받아서 음성 파일을 다운로드 받아서 prediction을 수행
 @app.post("/s3predict")
 async def s3predict(request: Request):
-    start = time.time()
-    # Download the S3 file to a temporary location on the server
-    s3_context = await request.form()
-    print(s3_context)
-
     try:
-        s3_key = s3_context['s3_key']
-        print(s3_key)  # Audio/youtube-help.wav
-    except:
+        start = time.time()
+
+        # Download the S3 file to a temporary location on the server
+        s3_context = await request.form()
+        print(s3_context)
+
+        try:
+            s3_key = s3_context['s3_key']
+            print(s3_key)  # Audio/youtube-help.wav
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="S3 URI(key) is required."
+            )
+
+        try:
+            s3_text = s3_context['text_input_s3']
+            print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Audio text is required."
+            )
+
+        file_location = "static/temp_file.wav"
+
+        try:
+            s3.download_file(Bucket=bucket_name, Key=s3_key, Filename=file_location)
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to download file from S3."
+            )
+
+        # Load the audio data in the temporary file and resample it to the desired sampling rate
+        audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
+
+        # Predict the label and probabilities for the loaded audio
+        audio_label, a_probabilities = audio_predict(audio_data, sr)
+
+        # Delete the temporary file
+        os.remove(file_location)
+
+        if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
+
+            end = time.time() - start
+            print(f'{end} seconds')
+
+            return {
+                "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+                "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
+                "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
+            }
+
+        else:
+            # youtube-help.wav text
+            # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
+            text = s3_text
+            # print(text)
+
+            from kobert_model import text_predict
+            import pickle
+            text_label, t_probabilities = text_predict(text)
+
+            # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
+            diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
+
+
+            combined_prob = a_probabilities.tolist()
+            combined_prob.extend(t_probabilities.tolist())
+
+            combined_prob_2 = [combined_prob]
+
+            print(combined_prob_2)
+
+            concate_label = diffusion_model.predict(combined_prob_2)
+            result_label = label_encoder[concate_label[0]]
+            result_prob = diffusion_model.predict_proba(combined_prob_2)
+
+            print(result_label)
+
+            end = time.time() - start
+            print(f'{end} seconds')
+
+            # Return the label and probabilities
+
+            return {
+                "result": "success",
+                "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
+                "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
+                "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
+            }
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="S3 URI is required."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected internal error occurred. Please try again later."
         )
-
-    try:
-        s3_text = s3_context['text_input_s3']
-        print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Audio text is required."
-        )
-
-    file_location = "static/temp_file.wav"
-    # if not s3_key:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="S3 URI is required."
-    #     )
-    try:
-        s3.download_file(Bucket=bucket_name, Key=s3_key, Filename=file_location)
-    except ClientError as e:
-        print(e)
-        return {"result": "error", "message": "Failed to download file from S3."}
-
-    # Load the audio data in the temporary file and resample it to the desired sampling rate
-    audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
-
-    # Predict the label and probabilities for the loaded audio
-    audio_label, a_probabilities = audio_predict(audio_data, sr)
-
-    # scaled_a_probabilities = scale_to_range(a_probabilities)
-
-    # Delete the temporary file
-    os.remove(file_location)
-
-    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
-
-        end = time.time() - start
-        print(f'{end} seconds')
-
-        return {
-            "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-            "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
-            "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
-        }
-
-    else:
-        # youtube-help.wav text
-        # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
-        text = s3_text
-        # print(text)
-
-        from kobert_model import text_predict
-        import pickle
-        text_label, t_probabilities = text_predict(text)
-
-        # scaled_t_probabilities = scale_to_range(t_probabilities)
-
-        # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
-        diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
-
-        combined_prob = a_probabilities.tolist()
-        combined_prob.extend(t_probabilities.tolist())
-
-        # combined_prob = np.array(combined_prob).reshape(1, -1)
-
-        combined_prob_2 = [combined_prob]
-
-        print(combined_prob_2)
-
-        concate_label = diffusion_model.predict(combined_prob_2)
-        result_label = label_encoder[concate_label[0]]
-        print(result_label)
-
-        end = time.time() - start
-        print(f'{end} seconds')
-
-        # Return the label and probabilities
-
-        return {
-            "result": "success",
-            "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-            "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
-            "combined_label": result_label, "combined_probabilities": combined_prob
-        }
 
 
 @app.get("/")
