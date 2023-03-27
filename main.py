@@ -20,8 +20,16 @@ from resnet import audio_predict
 
 # Load the .env file
 load_dotenv()
-s3 = boto3.client('s3')
+access_key = os.environ.get("ACCESS_KEY")
+secret_key = os.environ.get("SECRET_KEY")
 bucket_name = os.environ.get("BUCKET_NAME")
+
+
+s3 = boto3.client('s3',
+                  aws_access_key_id=access_key,
+                  aws_secret_access_key=secret_key
+                  )
+
 # print(bucket_name)
 
 label_encoder = {"실내": 'regular', "실외": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual', "절도범죄": 'theft',
@@ -136,7 +144,7 @@ async def s3predict(request: Request):
     print(s3_context)
 
     s3_key = s3_context['s3_key']
-    print(s3_key)  # audiofile/youtube-help.wav
+    print(s3_key)  # Audio/youtube-help.wav
 
     s3_text = s3_context['text_input_s3']
     print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
