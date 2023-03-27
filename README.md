@@ -8,15 +8,26 @@
 - KoBERT 설치는 https://github.com/SKTBrain/KoBERT 참고
 - Local PC : Macbook Pro M1
 - S3 : AWS S3
-- AWS EC2 : t2.medium
+- AWS EC2 : t2.medium ubuntu 20.04
 
+<hr>
 <br>
+
+### 프로젝트 개요
 
 - RESNET과 KoBERT를 이용하여 응급 음성을 분류하는 프로젝트입니다. <br>
-- FastAPI를 이용하여 API를 만들었습니다.
+- 위 프로젝트는 범죄 상황에서의 위급(긴급) 음성 데이터를 분류하는 API를 개발하는 것이 목표였습니다. <br>
+이를 위해 Resnet과 KoBERT를 사용하여 응급 상황(성추행, 강도, 절도, 폭행, 도움 요청)과 일반(정상) 상황을 분류하였습니다. <br>
+하지만 음성 데이터만으로는 완벽한 분류를 하지 못하기 때문에 음성 데이터에서 추출한 텍스트 데이터를 함께 사용하였습니다. <br>
+배포 환경에서 유리한 구조를 가진 RESNET과 한국어 분류에 용이한 KoBERT 모델을 사용하여 각각 음성 데이터와 텍스트 데이터에서 확률값을 계산하고, 이를 ML 모델을 활용한 Diffusion-Decision 과정을 통해 최종 결과를 추론하였습니다. <br>
+실시간성을 고려하여 Resnet과 KoBERT 모델의 캐싱 기능을 이용하여 추론 속도를 올렸으며, pytorch와 FastAPI를 사용하여 분류 API를 구축하였습니다. <br>
+이를 통해 사용자가 음성 데이터를 입력하면 API에서 응급 상황 여부를 신속하게 판별할 수 있습니다.
 
 <br>
+<hr>
 <br>
+
+### 페이지 구성
 
 - upload.html
   - API를 테스트하기 위해 만든 html 파일입니다.<br>
@@ -30,8 +41,7 @@
       - 2가지 옵션 모두 음성 파일에 포함된 텍스트를 필요로 합니다
 
 <br>
-<br>
-    
+
 - main.py
   - FastAPI를 이용하여 API를 만들었습니다.<br>
   - 음성 파일을 업로드하면 음성 파일을 분류합니다.<br>

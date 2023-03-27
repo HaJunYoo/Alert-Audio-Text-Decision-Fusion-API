@@ -6,7 +6,7 @@ kobert_tokenizer
 .cache
 
 static/*
-test_data/*
+test_data/*.wav
 
 Diffusion/.cache
 Diffusion/.ipynb_checkpoints
@@ -19,6 +19,7 @@ Diffusion/audio_text_diffusion_test.csv
 Diffusion/audio_text_label.csv
 Diffusion/requirements.txt
 Diffusion/result_probability.csv
+Diffusion/test_pickle.py
 
 test_main.http
 candidate.py

@@ -136,6 +136,8 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 # boto3
 # S3 버켓 URI와 음성 텍스트를 받아다가 prediction을 수행하는 코드
 # 업로드한 S3 주소를 받아서 음성 파일을 다운로드 받아서 prediction을 수행
+# 400 - Bad Request : s3에 없는 파일 주소를 입력했을 때, 오디오 혹은 텍스트를 못 받아왔을 때
+# 500 - Internal Server Error : prediction을 수행하는 과정에서 오류가 발생했을 때
 @app.post("/s3predict")
 async def s3predict(request: Request):
 
