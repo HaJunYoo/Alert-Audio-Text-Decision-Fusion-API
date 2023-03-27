@@ -12,6 +12,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette import status
 
+from pydantic_model import *
+
 import boto3
 from botocore.exceptions import ClientError
 
@@ -74,7 +76,6 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
     # Predict the label and probabilities for the loaded audio
     audio_label, a_probabilities = audio_predict(audio_data, sr)
 
-    scaled_a_probabilities = scale_to_range(a_probabilities)
 
     if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
 
@@ -83,7 +84,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         return {
             "result": "success",
-            "audio_label": audio_label, "audio_probabilities": scaled_a_probabilities.tolist(),
+            "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
             "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
             "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
         }
@@ -99,8 +100,6 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
         from kobert_model import text_predict
         import pickle
         text_label, t_probabilities = text_predict(text)
-
-        scaled_t_probabilities = scale_to_range(t_probabilities)
 
         # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
         diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
@@ -209,7 +208,6 @@ async def s3predict(request: Request):
 
                 # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
                 diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
-
 
                 combined_prob = a_probabilities.tolist()
                 combined_prob.extend(t_probabilities.tolist())

@@ -5,6 +5,8 @@ KoBERT/*
 kobert_tokenizer
 .cache
 
+pydantic_model.py
+
 static/*
 test_data/*.wav
 
