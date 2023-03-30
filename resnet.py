@@ -50,7 +50,7 @@ def softmax(vals, idx):
     return ((np.exp(valscpu[idx]))/a).item() * 100
 
 
-def audio_predict(audio_data, sr, model = resnet_model):
+def audio_feature(audio_data, sr, model = resnet_model):
     # Define label names
     label_names = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
 

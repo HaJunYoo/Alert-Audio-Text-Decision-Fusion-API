@@ -28,6 +28,7 @@ filelock==3.10.0
 flatbuffers==23.3.3
 gluonnlp==0.10.0
 graphviz==0.8.4
+gunicorn==20.1.0
 h11==0.14.0
 huggingface-hub==0.0.12
 idna==3.4

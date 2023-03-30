@@ -10,18 +10,18 @@ pydantic_model.py
 static/*
 test_data/*.wav
 
-Diffusion/.cache
-Diffusion/.ipynb_checkpoints
-Diffusion/.pytest_cache
-Diffusion/__pycache__
-Diffusion/outputs
-Diffusion/outputs/*
-Diffusion/audio_text_diffusion_train.csv
-Diffusion/audio_text_diffusion_test.csv
-Diffusion/audio_text_label.csv
-Diffusion/requirements.txt
-Diffusion/result_probability.csv
-Diffusion/test_pickle.py
+Fusion/.cache
+Fusion/.ipynb_checkpoints
+Fusion/.pytest_cache
+Fusion/__pycache__
+Fusion/outputs
+Fusion/outputs/*
+Fusion/audio_text_diffusion_train.csv
+Fusion/audio_text_diffusion_test.csv
+Fusion/audio_text_label.csv
+Fusion/requirements.txt
+Fusion/result_probability.csv
+Fusion/test_pickle.py
 
 test_main.http
 candidate.py

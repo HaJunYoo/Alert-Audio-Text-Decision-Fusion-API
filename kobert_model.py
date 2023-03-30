@@ -93,7 +93,7 @@ def softmax(vals, idx):
     return ((np.exp(valscpu[idx])) / a).item() * 100
 
 
-def text_predict(predict_sentence, model=kobert_model):
+def text_feature(predict_sentence, model=kobert_model):
     print("predictsentence start:", predict_sentence)
     start = time.time()
     text_label = ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']

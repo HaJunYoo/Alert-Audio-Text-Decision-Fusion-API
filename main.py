@@ -18,7 +18,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 import torch
-from resnet import audio_predict
+from resnet import audio_feature
 
 # Load the .env file
 load_dotenv()
@@ -44,21 +44,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-def scale_to_range(arr, target_range=(0, 20)):
-    # Calculate exponential values for each element
-    exp_arr = np.exp(arr)
-
-    # Calculate the sum of all exponential values
-    exp_sum = np.sum(exp_arr)
-
-    # Calculate probability for each element by dividing its exponential value by the sum
-    probs = exp_arr / exp_sum
-
-    # Scale probabilities to target range
-    scaled = (probs * (target_range[1] - target_range[0])) + target_range[0]
-
-    return scaled
-
 
 @app.post("/predict")
 async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...)):
@@ -74,7 +59,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
     audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
 
     # Predict the label and probabilities for the loaded audio
-    audio_label, a_probabilities = audio_predict(audio_data, sr)
+    audio_label, a_feature = audio_feature(audio_data, sr)
 
 
     if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
@@ -84,9 +69,9 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         return {
             "result": "success",
-            "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-            "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
-            "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
+            "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+            "text_label": "regular", "text_feature": [10, 0, 0, 0, 0, 0],
+            "combined_label": "regular", "combined_probabilities": [1, 0, 0, 0, 0, 0]
         }
 
     else:
@@ -97,23 +82,23 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
         text = text_input
         # print(text)
 
-        from kobert_model import text_predict
+        from kobert_model import text_feature
         import pickle
-        text_label, t_probabilities = text_predict(text)
+        text_label, t_feature = text_feature(text)
 
         # fusion_model = pd.read_pickle('./Fusion/DT_model.pkl')
         fusion_model = pickle.load(open('Fusion/DT_model.pkl', 'rb'))
 
-        combined_prob = a_probabilities.tolist()
-        combined_prob.extend(t_probabilities.tolist())
+        combined_feature = a_feature.tolist()
+        combined_feature.extend(t_feature.tolist())
 
-        combined_prob_2 = [combined_prob]
+        combined_feature2 = [combined_feature]
 
-        print(combined_prob_2)
+        print(combined_feature2)
 
-        concate_label = fusion_model.predict(combined_prob_2)
+        concate_label = fusion_model.predict(combined_feature2)
         result_label = label_encoder[concate_label[0]]
-        result_prob = fusion_model.predict_proba(combined_prob_2)
+        result_prob = fusion_model.predict_proba(combined_feature2)
         print(result_label)
 
         end = time.time() - start
@@ -123,9 +108,9 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         return {
             "result": "success",
-            "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-            "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
-            "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
+            "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+            "text_label": text_label, "text_feature": t_feature.tolist(),
+            "combined_label": result_label, "combined_feature": result_prob[0].tolist()
         }
     # tolist() 메서드를 사용하여 NumPy 배열을 리스트로 변환하는 등, 쉽게 직렬화할 수 있는 형식으로 관련 데이터 유형을 변환합니다.
     # 이렇게 하면 FastAPI의 jsonable_encoder를 사용할 때 발생했던 ValueError와 TypeError를 해결할 수 있습니다.
@@ -180,7 +165,7 @@ async def s3predict(request: Request):
             audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
 
             # Predict the label and probabilities for the loaded audio
-            audio_label, a_probabilities = audio_predict(audio_data, sr)
+            audio_label, a_feature = audio_feature(audio_data, sr)
 
             # Delete the temporary file
             os.remove(file_location)
@@ -191,9 +176,9 @@ async def s3predict(request: Request):
                 print(f'{end} seconds')
 
                 return {
-                    "result": "success", "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-                    "text_label": "regular", "text_probabilities": [10, 0, 0, 0, 0, 0],
-                    "combined_label": "regular", "combined_probabilities": [10, 0, 0, 0, 0, 0]
+                    "result": "success", "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+                    "text_label": "regular", "text_feature": [10, 0, 0, 0, 0, 0],
+                    "combined_label": "regular", "combined_probabilities": [1, 0, 0, 0, 0, 0]
                 }
 
             else:
@@ -202,23 +187,23 @@ async def s3predict(request: Request):
                 text = s3_text
                 # print(text)
 
-                from kobert_model import text_predict
+                from kobert_model import text_feature
                 import pickle
-                text_label, t_probabilities = text_predict(text)
+                text_label, t_feature = text_feature(text)
 
                 # fusion_model = pd.read_pickle('./Fusion/DT_model.pkl')
                 fusion_model = pickle.load(open('Fusion/DT_model.pkl', 'rb'))
 
-                combined_prob = a_probabilities.tolist()
-                combined_prob.extend(t_probabilities.tolist())
+                combined_feature = a_feature.tolist()
+                combined_feature.extend(t_feature.tolist())
 
-                combined_prob_2 = [combined_prob]
+                combined_feature2 = [combined_feature]
 
-                print(combined_prob_2)
+                print(combined_feature2)
 
-                concate_label = fusion_model.predict(combined_prob_2)
+                concate_label = fusion_model.predict(combined_feature2)
                 result_label = label_encoder[concate_label[0]]
-                result_prob = fusion_model.predict_proba(combined_prob_2)
+                result_prob = fusion_model.predict_proba(combined_feature2)
 
                 print(result_label)
 
@@ -229,8 +214,8 @@ async def s3predict(request: Request):
 
                 return {
                     "result": "success",
-                    "audio_label": audio_label, "audio_probabilities": a_probabilities.tolist(),
-                    "text_label": text_label, "text_probabilities": t_probabilities.tolist(),
+                    "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+                    "text_label": text_label, "text_feature": t_feature.tolist(),
                     "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
                 }
 
