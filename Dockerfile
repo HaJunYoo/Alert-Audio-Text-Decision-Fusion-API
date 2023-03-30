@@ -13,6 +13,9 @@ RUN pip install --upgrade pip && \
 EXPOSE 8800
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8800"]
-# docker run --name fastapi -d fastapiapp
+# 이미지 빌드
+# sudo docker build -t fastapiapp .
+# 컨테이너 빌드
 # docker run --name fastapi -d -p 8000:8800 fastapiapp
+# 포트 확인
 # sudo lsof -i :8000

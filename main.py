@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette import status
 
-from pydantic_model import *
+# from pydantic_model import *
 
 import boto3
 from botocore.exceptions import ClientError
@@ -33,7 +33,9 @@ s3 = boto3.client('s3',
 
 # print(bucket_name)
 
-label_encoder = {"실내": 'regular', "실외": 'regular', "도움요청": 'help', "강도범죄": 'robbery', "강제추행(성범죄)": 'sexual',
+label_encoder = {"실내": 'regular', "실외": 'regular',
+                 "도움요청": 'help', "강도범죄": 'robbery',
+                 "강제추행(성범죄)": 'sexual',
                  "절도범죄": 'theft',
                  "폭력범죄": 'violence'}
 # ['regular', 'help', 'robbery', 'sexual', 'theft', 'violence']
