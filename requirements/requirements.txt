@@ -1,0 +1,16 @@
+pandas==1.5.2
+numpy==1.21.6
+torch==1.10.1
+torchvision==0.11.2
+onnxruntime==1.8.0
+boto3<=1.15.18
+fastapi==0.95.0
+uvicorn==0.15.0
+gunicorn==20.1.0
+librosa
+python-dotenv
+pydantic
+jinja2
+python-multipart
+
+
