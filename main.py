@@ -101,8 +101,8 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
         import pickle
         text_label, t_probabilities = text_predict(text)
 
-        # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
-        diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
+        # fusion_model = pd.read_pickle('./Fusion/DT_model.pkl')
+        fusion_model = pickle.load(open('Fusion/DT_model.pkl', 'rb'))
 
         combined_prob = a_probabilities.tolist()
         combined_prob.extend(t_probabilities.tolist())
@@ -111,9 +111,9 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 
         print(combined_prob_2)
 
-        concate_label = diffusion_model.predict(combined_prob_2)
+        concate_label = fusion_model.predict(combined_prob_2)
         result_label = label_encoder[concate_label[0]]
-        result_prob = diffusion_model.predict_proba(combined_prob_2)
+        result_prob = fusion_model.predict_proba(combined_prob_2)
         print(result_label)
 
         end = time.time() - start
@@ -206,8 +206,8 @@ async def s3predict(request: Request):
                 import pickle
                 text_label, t_probabilities = text_predict(text)
 
-                # diffusion_model = pd.read_pickle('./Diffusion/DT_model.pkl')
-                diffusion_model = pickle.load(open('./Diffusion/DT_model.pkl', 'rb'))
+                # fusion_model = pd.read_pickle('./Fusion/DT_model.pkl')
+                fusion_model = pickle.load(open('Fusion/DT_model.pkl', 'rb'))
 
                 combined_prob = a_probabilities.tolist()
                 combined_prob.extend(t_probabilities.tolist())
@@ -216,9 +216,9 @@ async def s3predict(request: Request):
 
                 print(combined_prob_2)
 
-                concate_label = diffusion_model.predict(combined_prob_2)
+                concate_label = fusion_model.predict(combined_prob_2)
                 result_label = label_encoder[concate_label[0]]
-                result_prob = diffusion_model.predict_proba(combined_prob_2)
+                result_prob = fusion_model.predict_proba(combined_prob_2)
 
                 print(result_label)
 
