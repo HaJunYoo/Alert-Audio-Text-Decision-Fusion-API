@@ -26,6 +26,40 @@
 
 <hr>
 
+### 사용 데이터
+- 총 4600개의 음성 파일을 사용하였습니다
+  - 라벨
+    - 응급(성추행, 강도, 절도, 폭행, 도움 요청)
+    - 정상(대사, 비대사)
+      - 비대사 : 음성 파일에 대화가 없는 경우
+      - 대사 : 음성 파일에 대화가 있는 경우
+- 사용 데이터 출처
+  - mel-spectrogram - Resnet 학습 데이터
+      - [위급상황 음성/음향
+  ](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=170)
+      - [자유 대화 음성 데이터(영유아)](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=realm&dataSetSn=108)
+      - [자유 대화 음성 데이터(성인 남녀)](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100)
+  - KoBERT Fine-tuning을 위해 사용한 데이터입니다.
+    - 일상 대화 데이터
+      - [Chatbot_data_for_Korean v1.0](https://github.com/songys/Chatbot_data)
+    - 범죄 현장 표현
+      - 위 AI hub 데이터에서 사용된 텍스트 표현들
+    
+### 데이터 전처리
+
+- Airflow를 이용하여 데이터를 전처리 및 S3에 업로드하였습니다.<br>
+
+- wav_to_spectrogram.py
+  - 카테고리 별로 음성파일을 가져옵니다.
+    - 음성 파일을 스펙트로그램으로 변환합니다.
+    - 음성 파일을 4초 단위로 자릅니다.
+    - 멜-스펙트로그램(3채널)으로 변환합니다.
+    - 멜-스펙트로그램으로 변환한 후, 224x224로 resize합니다.
+  - 이후 폴더를 zip 파일로 압축한 후, S3 upload DAG를 통해 트리거링합니다
+- s3_upload.py
+  - zip 파일을 Dataset으로써 공유하여 update가 있을 시, S3에 업로드합니다.
+
+
 ### 페이지 구성
 
 - upload.html
@@ -83,8 +117,11 @@
 ## 3. 프로젝트 구조
 
 - __프로젝트 최종 구조__
+  
+  <img src="images/Architecture.jpeg"  width="50%" height="50%"/>
 
-  <img src="./Architecture.jpeg"  width="70%" height="70%"/>
+- __프로젝트 최종 로직__
+  <img src="images/ML API Logic tree.jpeg"  width="90%" height="90%"/>
 
 
 - 각 model은 cpu를 통해 inference를 수행합니다.
