@@ -1,5 +1,6 @@
 # model
 pytorch_resnet.pt
+pytorch_resnet2.pt
 kobert_model_3.pt
 KoBERT/*
 kobert_tokenizer
@@ -22,6 +23,12 @@ Fusion/audio_text_label.csv
 Fusion/requirements.txt
 Fusion/result_probability.csv
 Fusion/test_pickle.py
+Fusion/test.py
+Fusion/fusion_layer.ipynb 
+Fusion/fusion_train_no_feature.csv
+Fusion/result_train_features.csv
+Fusion/audio_text_label_null_removed.csv
+
 
 test_main.http
 candidate.py
