@@ -206,3 +206,8 @@ async def upload(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
 # uvicorn main:app --reload
+
+
+
+
+
