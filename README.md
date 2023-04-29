@@ -2,7 +2,7 @@
 
 ## 1. 프로젝트 소개
 
-- 사용 모델 : Densenet, Early fusion(FFT, Mel Spectrogram, MFCC), KoBERT, Late Decision fusion(Softmax)
+- 사용 모델 : Densenet, Early fusion(STFT, Mel Spectrogram, MFCC), KoBERT, Late Decision fusion(Softmax)
 - 사용 언어 : python
 - 사용 대표 라이브러리 : Apache Airflow, librosa, numpy, pytorch, fastapi, jinja2, boto3, timm, densenet, kobert
 - KoBERT 설치는 https://github.com/SKTBrain/KoBERT 참고
@@ -19,7 +19,7 @@
 - 위 프로젝트는 범죄 상황에서의 위급(긴급) 음성 데이터를 분류하는 API를 개발하는 것이 목표였습니다. <br>
 이를 위해 Imagenet에 Pretrained된 Densenet과 KoBERT를 사용하여 응급 상황(성추행, 강도, 절도, 폭행, 도움 요청)과 일반(정상) 상황을 분류하였습니다. <br>
 하지만 음성 데이터만으로는 완벽한 분류를 하지 못하기 때문에 음성 데이터에서 추출한 텍스트 데이터를 함께 사용하였습니다. <br>
-더 나은 일반화를 위해 FFT, Mel-Spectrogram, MFCC를 Early fusion을 통해 음성 피쳐를 추출합니다. <br>
+더 나은 일반화를 위해 STFT, Mel-Spectrogram, MFCC를 Early fusion을 통해 음성 피쳐를 추출합니다. <br>
 이후, Densenet를 위 피쳐에 Fine-tuning 한 후, 오디오 데이터로부터 피쳐를 추출합니다. <br>
 한국어 분류에 용이한 KoBERT 모델을 Fine-tuning 한 후, 텍스트 데이터에서 피쳐를 추출합니다.
 위 2개의 피쳐를 이어붙인 후, softmax를 활용한 Late Fusion 과정을 통해 최종 결과를 추론하였습니다. <br>

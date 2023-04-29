@@ -6,6 +6,9 @@ import librosa
 import numpy as np
 from skimage.transform import resize
 
+import os
+import matplotlib.pyplot as plt
+
 
 # densenet
 class AudioModel(nn.Module):
@@ -42,6 +45,28 @@ checkpoint = torch.load(audio_model_path, map_location=torch.device('cpu'))
 audio_model = AudioModel(num_classes=6)
 audio_model.load_state_dict(checkpoint['model_state_dict'])
 
+
+def save_features_as_images(stft, melspec, mfcc, output_dir='audio_image'):
+    # Create the output directory if it does not exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Save STFT as an image
+    stft_filepath = os.path.join(output_dir, 'stft.png')
+    plt.imsave(stft_filepath, stft)
+    plt.close()
+
+    # Save Mel-spectrogram as an image
+    spec_filepath = os.path.join(output_dir, 'melspec.png')
+    plt.imsave(spec_filepath, melspec)
+    plt.close()
+
+    # Save MFCC as an image
+    mfcc_filepath = os.path.join(output_dir, 'mfcc.png')
+    plt.imsave(mfcc_filepath, mfcc)
+    plt.close()
+
+
 # audio_file, binary 여부 
 def audio_feature(audio_file, audio_model=audio_model, binary_model=audio_binary, 
                          device=device, sr=44100, n_fft=1024, hop_length=1024,
@@ -64,7 +89,7 @@ def audio_feature(audio_file, audio_model=audio_model, binary_model=audio_binary
         stft = np.abs(librosa.stft(audio_data, n_fft=n_fft, hop_length=hop_length))
         melspec = librosa.feature.melspectrogram(y=audio_data, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
         mfcc = librosa.feature.mfcc(S=librosa.power_to_db(melspec), sr=sr, n_mfcc=n_mfcc)
-
+        
         # Normalize Mel-spectrogram
         melspec_mean = np.mean(melspec)
         melspec_std = np.std(melspec)
@@ -81,16 +106,17 @@ def audio_feature(audio_file, audio_model=audio_model, binary_model=audio_binary
         stft_resized = resize(stft, input_shape)
         melspec_norm_resized = resize(melspec_norm, input_shape)
         mfcc_norm_resized = resize(mfcc_norm, input_shape)
-
         # Concatenate the features
         features = np.concatenate((stft_resized, melspec_norm_resized, mfcc_norm_resized), axis=0)
-
-        # Convert the features to a PyTorch tensor and add batch and channel dimensions
+#        Convert the features to a PyTorch tensor and add batch and channel dimensions
         sample = torch.tensor(features).float().unsqueeze(0).unsqueeze(0).to(device)
-
         # Move the model to evaluation mode
         model.eval()
-
+        
+        # Save the features as images 
+        # stft_db = librosa.power_to_db(stft_resized)
+        # melspec_db = librosa.power_to_db(melspec_norm_resized)
+        # save_features_as_images(stft_db, melspec_db, mfcc_norm_resized, output_dir='./audio_image')
         # Make a prediction
         with torch.no_grad():
             output = model(sample)

@@ -10,6 +10,7 @@ kobert_tokenizer
 
 .cache
 
+audio_image/*
 
 pydantic_model.py
 
@@ -35,7 +36,6 @@ Fusion/*
 # Fusion/fusion_train_no_feature.csv
 # Fusion/result_train_features.csv
 # Fusion/audio_text_label_null_removed.csv
-
 
 test_main.http
 candidate.py
