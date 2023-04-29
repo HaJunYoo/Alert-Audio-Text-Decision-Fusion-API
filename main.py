@@ -13,7 +13,6 @@ from fastapi.templating import Jinja2Templates
 from starlette import status
 
 # from pydantic_model import *
-
 import boto3
 from botocore.exceptions import ClientError
 
@@ -60,6 +59,7 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
     binary_audio_label, binary_a_feature = audio_feature(file_location, binary=True)
 
     if binary_audio_label == 'regular':
+        print(f'audio_label: {binary_audio_label}')
 
         end = time.time() - start
         print(f'{end} seconds')
