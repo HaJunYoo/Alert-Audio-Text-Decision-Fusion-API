@@ -18,7 +18,6 @@ import boto3
 from botocore.exceptions import ClientError
 
 import torch
-from resnet import audio_feature
 
 # Load the .env file
 load_dotenv()
@@ -33,7 +32,7 @@ s3 = boto3.client('s3',
 
 # print(bucket_name)
 
-label_encoder = {"실내": 'regular', "실외": 'regular',
+label_encoder = {"실내": 'regular', "실외": 'regular', "정상": 'regular',
                  "도움요청": 'help', "강도범죄": 'robbery',
                  "강제추행(성범죄)": 'sexual',
                  "절도범죄": 'theft',
@@ -54,72 +53,51 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
     file_location = f"static/{audio_file.filename}"
     with open(file_location, "wb+") as file_object:
         file_object.write(audio_file.file.read())
-
     print(audio_file.filename)
 
-    # Load the audio data in the static and resample it to the desired sampling rate
-    audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
-
+    from densenet import audio_feature
     # Predict the label and probabilities for the loaded audio
-    audio_label, a_feature = audio_feature(audio_data, sr)
+    binary_audio_label, binary_a_feature = audio_feature(file_location, binary=True)
 
-
-    if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
+    if binary_audio_label == 'regular':
 
         end = time.time() - start
         print(f'{end} seconds')
 
         return {
             "result": "success",
-            "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+            "audio_label": binary_audio_label, "audio_feature": binary_a_feature.tolist(),
             "text_label": "regular", "text_feature": [10, 0, 0, 0, 0, 0],
             "combined_label": "regular", "combined_probabilities": [1, 0, 0, 0, 0, 0]
         }
+        
+    audio_label, a_feature = audio_feature(file_location, binary=False)
+    print(f'audio_label: {audio_label}')
+    text = text_input
+    from kobert_model import text_feature
+    from fusion import predict_combined_features
 
-    else:
-        # youtube-help.wav text
-        # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
-        # text input
+    text_label, t_feature = text_feature(text)
 
-        text = text_input
-        # print(text)
+    result_label, result_prob = predict_combined_features(audio_feature=a_feature, 
+                                                            text_feature=t_feature)
+    print(f'result_label : {result_label}')
 
-        from kobert_model import text_feature
-        import pickle
-        text_label, t_feature = text_feature(text)
+    end = time.time() - start
+    print(f'{end} seconds')
 
-        # fusion_model = pd.read_pickle('./Fusion/DT_model.pkl')
-        fusion_model = pickle.load(open('Fusion/DT_model.pkl', 'rb'))
-
-        combined_feature = a_feature.tolist()
-        combined_feature.extend(t_feature.tolist())
-
-        combined_feature2 = [combined_feature]
-
-        print(combined_feature2)
-
-        concate_label = fusion_model.predict(combined_feature2)
-        result_label = label_encoder[concate_label[0]]
-        result_prob = fusion_model.predict_proba(combined_feature2)
-        print(result_label)
-
-        end = time.time() - start
-        print(f'{end} seconds')
-
-        # Return the label and probabilities
-
-        return {
-            "result": "success",
-            "audio_label": audio_label, "audio_feature": a_feature.tolist(),
-            "text_label": text_label, "text_feature": t_feature.tolist(),
-            "combined_label": result_label, "combined_feature": result_prob[0].tolist()
-        }
+    # Return the label and probabilities
+    return {
+        "result": "success",
+        "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+        "text_label": text_label, "text_feature": t_feature.tolist(),
+        "combined_label": result_label, "combined_feature": result_prob[0].tolist()
+    }
     # tolist() 메서드를 사용하여 NumPy 배열을 리스트로 변환하는 등, 쉽게 직렬화할 수 있는 형식으로 관련 데이터 유형을 변환합니다.
     # 이렇게 하면 FastAPI의 jsonable_encoder를 사용할 때 발생했던 ValueError와 TypeError를 해결할 수 있습니다.
 
 
 # S3 predict using boto3
-# boto3
 # S3 버켓 URI와 음성 텍스트를 받아다가 prediction을 수행하는 코드
 # 업로드한 S3 주소를 받아서 음성 파일을 다운로드 받아서 prediction을 수행
 # 400 - Bad Request : s3에 없는 파일 주소를 입력했을 때, 오디오 혹은 텍스트를 못 받아왔을 때
@@ -128,7 +106,6 @@ async def predict(audio_file: UploadFile = File(...), text_input: str = Form(...
 async def s3predict(request: Request):
 
         start = time.time()
-
         # Download the S3 file to a temporary location on the server
         s3_context = await request.form()
         print(s3_context)
@@ -162,63 +139,52 @@ async def s3predict(request: Request):
                 detail="Failed to download file from S3."
             )
         # prediction error to 500 error
-        try:
-            # Load the audio data in the temporary file and resample it to the desired sampling rate
-            audio_data, sr = librosa.load(file_location, sr=44100, duration=5)
-
+        try:            
+            from densenet import audio_feature
             # Predict the label and probabilities for the loaded audio
-            audio_label, a_feature = audio_feature(audio_data, sr)
+            binary_audio_label, binary_a_feature = audio_feature(file_location, binary=True)
 
-            # Delete the temporary file
-            os.remove(file_location)
-
-            if audio_label not in ['help', 'robbery', 'sexual', 'theft', 'violence']:
+            if binary_audio_label == 'regular':
+                print(f'audio_label: {binary_audio_label}')
 
                 end = time.time() - start
                 print(f'{end} seconds')
+                
+                # Delete the temporary file
+                os.remove(file_location)
 
                 return {
-                    "result": "success", "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+                    "result": "success",
+                    "audio_label": binary_audio_label, "audio_feature": binary_a_feature.tolist(),
                     "text_label": "regular", "text_feature": [10, 0, 0, 0, 0, 0],
                     "combined_label": "regular", "combined_probabilities": [1, 0, 0, 0, 0, 0]
                 }
 
             else:
-                # youtube-help.wav text
-                # text = '다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.'
+                audio_label, a_feature = audio_feature(file_location, binary=False)
+                print(f'audio_label: {audio_label}')
                 text = s3_text
-                # print(text)
-
                 from kobert_model import text_feature
-                import pickle
+                from fusion import predict_combined_features
+
                 text_label, t_feature = text_feature(text)
 
-                # fusion_model = pd.read_pickle('./Fusion/DT_model.pkl')
-                fusion_model = pickle.load(open('Fusion/DT_model.pkl', 'rb'))
-
-                combined_feature = a_feature.tolist()
-                combined_feature.extend(t_feature.tolist())
-
-                combined_feature2 = [combined_feature]
-
-                print(combined_feature2)
-
-                concate_label = fusion_model.predict(combined_feature2)
-                result_label = label_encoder[concate_label[0]]
-                result_prob = fusion_model.predict_proba(combined_feature2)
-
-                print(result_label)
+                result_label, result_prob = predict_combined_features(audio_feature=a_feature, 
+                                                                        text_feature=t_feature)
+                print(f'result_label : {result_label}')
 
                 end = time.time() - start
                 print(f'{end} seconds')
+                
+                # Delete the temporary file
+                os.remove(file_location)
 
                 # Return the label and probabilities
-
                 return {
                     "result": "success",
                     "audio_label": audio_label, "audio_feature": a_feature.tolist(),
                     "text_label": text_label, "text_feature": t_feature.tolist(),
-                    "combined_label": result_label, "combined_probabilities": result_prob[0].tolist()
+                    "combined_label": result_label, "combined_feature": result_prob[0].tolist()
                 }
 
         except Exception as e:

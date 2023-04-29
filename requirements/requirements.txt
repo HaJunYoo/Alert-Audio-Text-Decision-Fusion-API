@@ -12,5 +12,5 @@ python-dotenv
 pydantic
 jinja2
 python-multipart
-
-
+scikit-image
+timm

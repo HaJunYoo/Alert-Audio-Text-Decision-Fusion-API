@@ -1,33 +1,40 @@
+./requirements.txt
+
 # model
-pytorch_resnet.pt
-pytorch_resnet2.pt
-kobert_model_3.pt
+resnet-model/*
+resnet.py
+
 KoBERT/*
 kobert_tokenizer
+
+
 .cache
+
 
 pydantic_model.py
 
 static/*
 test_data/*.wav
 
-Fusion/.cache
-Fusion/.ipynb_checkpoints
-Fusion/.pytest_cache
-Fusion/__pycache__
-Fusion/outputs
-Fusion/outputs/*
-Fusion/audio_text_diffusion_train.csv
-Fusion/audio_text_diffusion_test.csv
-Fusion/audio_text_label.csv
-Fusion/requirements.txt
-Fusion/result_probability.csv
-Fusion/test_pickle.py
-Fusion/test.py
-Fusion/fusion_layer.ipynb 
-Fusion/fusion_train_no_feature.csv
-Fusion/result_train_features.csv
-Fusion/audio_text_label_null_removed.csv
+
+Fusion/*
+# Fusion/.cache
+# Fusion/.ipynb_checkpoints
+# Fusion/.pytest_cache
+# Fusion/__pycache__
+# Fusion/outputs
+# Fusion/outputs/*
+# Fusion/audio_text_diffusion_train.csv
+# Fusion/audio_text_diffusion_test.csv
+# Fusion/audio_text_label.csv
+# Fusion/requirements.txt
+# Fusion/result_probability.csv
+# Fusion/test_pickle.py
+# Fusion/test.py
+# Fusion/fusion_layer.ipynb 
+# Fusion/fusion_train_no_feature.csv
+# Fusion/result_train_features.csv
+# Fusion/audio_text_label_null_removed.csv
 
 
 test_main.http
