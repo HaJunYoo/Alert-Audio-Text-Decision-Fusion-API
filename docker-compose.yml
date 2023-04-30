@@ -14,4 +14,4 @@ services:
       - "8000:8800"
     
     volumes:
-    - /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app/static
+    - /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/static:/app/static
