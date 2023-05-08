@@ -95,6 +95,7 @@ def audio_feature(audio_file, audio_model=audio_model, binary_model=audio_binary
         melspec_std = np.std(melspec)
         melspec_std += 1e-8  # Add a small value to avoid division by zero
         melspec_norm = (melspec - melspec_mean) / melspec_std
+        melspec_db = librosa.power_to_db(melspec_norm)
 
         # Normalize MFCC
         mfcc_mean = np.mean(mfcc)
@@ -104,11 +105,11 @@ def audio_feature(audio_file, audio_model=audio_model, binary_model=audio_binary
 
         # Resize each feature to the specified input_shape
         stft_resized = resize(stft, input_shape)
-        melspec_norm_resized = resize(melspec_norm, input_shape)
+        melspec_norm_resized = resize(melspec_db, input_shape)
         mfcc_norm_resized = resize(mfcc_norm, input_shape)
         # Concatenate the features
         features = np.concatenate((stft_resized, melspec_norm_resized, mfcc_norm_resized), axis=0)
-#        Convert the features to a PyTorch tensor and add batch and channel dimensions
+        #  Convert the features to a PyTorch tensor and add batch and channel dimensions
         sample = torch.tensor(features).float().unsqueeze(0).unsqueeze(0).to(device)
         # Move the model to evaluation mode
         model.eval()
