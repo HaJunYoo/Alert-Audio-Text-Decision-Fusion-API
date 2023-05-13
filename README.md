@@ -176,7 +176,7 @@
 
 - __프로젝트 최종 구조__
   
-  <img src="images/Architecture.jpeg"  width="50%" height="50%"/>
+  <img src="images/Architecture1.jpeg"  width="50%" height="50%"/>
 
 - __프로젝트 최종 로직__
   <img src="images/ML API Logic tree.jpeg"  width="90%" height="90%"/>
