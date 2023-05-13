@@ -4,20 +4,21 @@
 resnet-model/*
 resnet.py
 
+
 KoBERT/*
 kobert_tokenizer
-
 
 .cache
 
 audio_image/*
 
 pydantic_model.py
+Dockerfile_mac
 
 static/*
 test_data/*.wav
 
-
+former_model/*
 Fusion/*
 # Fusion/.cache
 # Fusion/.ipynb_checkpoints
