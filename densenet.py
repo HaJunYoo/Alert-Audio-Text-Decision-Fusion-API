@@ -33,13 +33,13 @@ class AudioModel(nn.Module):
     
 device = torch.device('cpu')
 # Define the path to the saved model
-binary_model_path = './resnet-model/pytorch_ff_densenet_label2.pt'
+binary_model_path = './resnet-model/pytorch_ff_densenet_label2_scale_up.pt'
 # Load the saved model
 checkpoint = torch.load(binary_model_path, map_location=torch.device('cpu'))
 audio_binary = AudioModel(num_classes=2)
 audio_binary.load_state_dict(checkpoint['model_state_dict'])
 
-audio_model_path = './resnet-model/pytorch_ff_densenet_label6.pt'
+audio_model_path = './resnet-model/pytorch_ff_densenet_label6_scale_up.pt'
 # Load the saved model
 checkpoint = torch.load(audio_model_path, map_location=torch.device('cpu'))
 audio_model = AudioModel(num_classes=6)
