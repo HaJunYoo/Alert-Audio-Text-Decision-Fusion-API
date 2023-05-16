@@ -2,7 +2,7 @@ FROM python:3.8
 
 ENV TZ=Asia/Seoul
 
-COPY ./ml_server/requirements/requirements.txt /app/requirements/requirements.txt
+COPY ./requirements/requirements.txt /app/requirements/requirements.txt
 WORKDIR /app
 
 # COPY . /app

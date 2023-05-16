@@ -33,7 +33,7 @@ services:
     ports:
       - "8000:8800"
     volumes:
-      - "./ml_server : /app" 
+      - "/home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/ml_server:/app" 
       #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app 
       #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/static:/app/static
     command: uvicorn main:app --host 0.0.0.0 --port 8800 --reload
