@@ -7,6 +7,9 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r ./requirements/requirements.txt &&\
     pip install git+https://git@github.com/SKTBrain/KoBERT.git@master
 
+RUN apt-get update &&  \
+    apt-get install vim -y
+
 WORKDIR /app
 
 EXPOSE 8800

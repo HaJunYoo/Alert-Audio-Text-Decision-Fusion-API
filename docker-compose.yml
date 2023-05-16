@@ -14,7 +14,8 @@ services:
       - "8000:8800"
     
     volumes:
-      - /home/ec2-user/Alert-Audio-Text-Decision-Fusion-API:/app 
+      - /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app 
       #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app 
       #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/static:/app/static
+      # ec2-user
     command: uvicorn main:app --host 0.0.0.0 --port 8800 --reload
