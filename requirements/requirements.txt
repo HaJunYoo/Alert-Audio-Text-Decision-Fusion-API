@@ -2,6 +2,8 @@ pandas==1.5.2
 numpy==1.21.6
 torch==1.10.1
 torchvision==0.11.2
+huggingface_hub
+timm
 onnxruntime==1.8.0
 boto3<=1.15.18
 fastapi==0.95.0
@@ -13,5 +15,4 @@ pydantic
 jinja2
 python-multipart
 scikit-image
-timm
 matplotlib

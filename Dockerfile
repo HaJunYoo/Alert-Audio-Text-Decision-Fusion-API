@@ -7,7 +7,7 @@ WORKDIR /app
 RUN pip install --upgrade pip && \
     pip install --upgrade setuptools &&\
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    pip install -r ./requirements/requirements.txt &&\
+    pip install --no-cache-dir -r ./requirements/requirements.txt &&\
     pip install git+https://git@github.com/SKTBrain/KoBERT.git@master
 
 EXPOSE 8800
