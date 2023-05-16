@@ -4,6 +4,7 @@
 ml_server/resnet-model/*
 ml_server/resnet.py
 
+.DS_Store
 
 ml_server/KoBERT/*
 kobert_tokenizer
