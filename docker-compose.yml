@@ -1,21 +1,49 @@
 version: "3"
 
+networks:
+  server:
+    driver: bridge
 # docker-compose up --build
 services:
+  reverse-proxy-container:
+    build:
+      context: ./nginx
+    ports:
+      - 80:80
+    restart: always
+    volumes:
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+    environment:
+      TZ: Asia/Seoul
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    networks:
+      - server
+
+
   # 컨테이너 빌드
   # docker run --name fastapi -d -p 8000:8800(호스트:컨테이너) fastapiapp
   fastapi:
     build:
-      context: .
+      context: ./ml_server
       dockerfile : Dockerfile
     container_name: fastapi
 
     ports:
       - "8000:8800"
-    
     volumes:
-      - /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app 
+      - "./ml_server : /app" 
       #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app 
       #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/static:/app/static
-      # ec2-user
     command: uvicorn main:app --host 0.0.0.0 --port 8800 --reload
+    healthcheck:
+      test: curl -f http://localhost:8800
+      interval: 1s
+      timeout: 3s
+      retries: 20
+    networks:
+      - server
+
+
+  # 컨테이너 빌드

@@ -1,21 +1,21 @@
 ./requirements.txt
 
 # model
-resnet-model/*
-resnet.py
+ml_server/resnet-model/*
+ml_server/resnet.py
 
 
-KoBERT/*
+ml_server/KoBERT/*
 kobert_tokenizer
 
-.cache
+ml_server/.cache
 
-audio_image/*
+ml_server/audio_image/*
 
 pydantic_model.py
 Dockerfile_mac
 
-static/*
+ml_server/static/*
 test_data/*.wav
 
 former_model/*
