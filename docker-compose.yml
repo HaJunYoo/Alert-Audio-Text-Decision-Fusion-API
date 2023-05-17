@@ -21,7 +21,6 @@ services:
     networks:
       - server
 
-
   # 컨테이너 빌드
   # docker run --name fastapi -d -p 8000:8800(호스트:컨테이너) fastapiapp
   fastapi:
@@ -34,11 +33,10 @@ services:
       - "8000:8800"
     volumes:
       - "/home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/ml_server:/app" 
-      #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API:/app 
-      #- /home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/static:/app/static
+
     command: uvicorn main:app --host 0.0.0.0 --port 8800 --reload
     healthcheck:
-      test: curl -f http://localhost:8800
+      test: curl -f http://localhost:8000
       interval: 1s
       timeout: 3s
       retries: 20
