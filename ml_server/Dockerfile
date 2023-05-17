@@ -18,7 +18,7 @@ RUN apt-get update &&  \
 EXPOSE 8800
 EXPOSE 8000
 
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8800"]
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 # 이미지 빌드
 # sudo docker build -t fastapiapp .
 # 컨테이너 빌드
