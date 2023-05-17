@@ -30,11 +30,11 @@ services:
     container_name: fastapi
 
     ports:
-      - "8000:8800"
+      - "8000:8000"
     volumes:
       - "/home/ubuntu/Alert-Audio-Text-Decision-Fusion-API/ml_server:/app" 
 
-    command: uvicorn main:app --host 0.0.0.0 --port 8800 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
       test: curl -f http://localhost:8000
       interval: 1s
