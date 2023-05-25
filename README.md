@@ -77,7 +77,7 @@
     | Recall | 59.30% |
 
 **Text Classification(KoBERT)(Finetuning)** 
-
+- Labels (robbery', 'sexual', 'regular', 'help', 'violence', 'theft’)
 - KoBERT Fine-tuning
     | Metric | Performance |    
     | --- | --- |
@@ -87,7 +87,7 @@
     | Recall | 74.72% |
 
 **Late Fusion(Audio feature - text feature) with softmax Test**
-
+- Labels (robbery', 'sexual', 'regular', 'help', 'violence', 'theft’)
 - Mean Concatenate - Softmax
     | Metric | Performance |    
     | --- | --- |
