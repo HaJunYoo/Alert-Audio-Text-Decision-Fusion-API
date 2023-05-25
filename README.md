@@ -63,7 +63,6 @@
 - Binary Label (emergency, regular)
     | Metric | Performance |    
     | --- | --- |
-    | Train Accuracy | 99.44 % |
     | Test Accuracy | 91.93% |
     | F1 score | 92.23% |
     | Precision | 93.64% |
@@ -72,7 +71,6 @@
 - Labels (robbery', 'sexual', 'regular', 'help', 'violence', 'theft’)
     | Metric | Performance |    
     | --- | --- |
-    | Train Accuracy | 98.92 % |
     | Test Accuracy | 59.27% |
     | F1 score | 0.551 |
     | Precision | 59.80% |
@@ -83,7 +81,6 @@
 - KoBERT Fine-tuning
     | Metric | Performance |    
     | --- | --- |
-    | Train Accuracy | 93.69 % |
     | Test Accuracy | 74.72% |
     | F1 score | 0.699 |
     | Precision | 84.54% |
