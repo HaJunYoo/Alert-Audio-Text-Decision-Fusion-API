@@ -194,6 +194,80 @@ async def s3predict(request: Request):
                 detail="An unexpected internal error occurred. Please try again later."
             )
 
+@app.post("/s3predict-label6")
+async def s3predict(request: Request):
+    
+        start = time.time()
+        # Download the S3 file to a temporary location on the server
+        s3_context = await request.form()
+        print(s3_context)
+
+        # key error to 400 error
+        try:
+            s3_key = s3_context['s3_key']
+            print(s3_key)  # Audio/youtube-help.wav
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="S3 URI(key) is required."
+            )
+
+        try:
+            s3_text = s3_context['text_input_s3']
+            print(s3_text)  # 다희야. 다희야. 어떡해. 여기 좀 도와주세요. 사람이 쓰러졌어요.
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Audio text is required."
+            )
+
+        file_location = "static/temp_file.wav"
+
+        try:
+            s3.download_file(Bucket=bucket_name, Key=s3_key, Filename=file_location)
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to download file from S3."
+            )
+        # prediction error to 500 error
+        try:            
+            from densenet import audio_feature
+            
+            audio_label, a_feature = audio_feature(file_location, binary=False)
+            print(f'audio_label: {audio_label}')
+            text = s3_text
+            from kobert_model import text_feature
+            from fusion import predict_combined_features
+
+            text_label, t_feature = text_feature(text)
+
+            result_label, result_prob = predict_combined_features(audio_feature=a_feature, 
+                                                                    text_feature=t_feature)
+            print(f'result_label : {result_label}')
+
+            end = time.time() - start
+            print(f'{end} seconds')
+            
+            # Delete the temporary file
+            os.remove(file_location)
+
+            # Return the label and probabilities
+            return {
+                "result": "success",
+                "audio_label": audio_label, "audio_feature": a_feature.tolist(),
+                "text_label": text_label, "text_feature": t_feature.tolist(),
+                "combined_label": result_label, "combined_feature": result_prob[0].tolist()
+            }
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected internal error occurred. Please try again later."
+            )
+
+
 
 @app.get("/")
 async def home():

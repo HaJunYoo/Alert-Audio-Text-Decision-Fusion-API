@@ -38,7 +38,7 @@ services:
       test: curl -f http://localhost:8000
       interval: 1s
       timeout: 3s
-      retries: 5
+      retries: 1
     networks:
       - server
 
