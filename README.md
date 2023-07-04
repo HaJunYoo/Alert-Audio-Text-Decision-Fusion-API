@@ -75,7 +75,7 @@
   - Text Classification Model : KoBERT(Fine Tuned)
   - Late Fusion(Audio feature - text feature) with softmax
   
-  | Metric | Early Fusion | Text | **Late Fusion** |
+  | Metric | Early Fusion | Text | **Late Fusion⭐️** |
   |---|---|---|---|
   | Test Accuracy | 59.27% | 74.72% | 89.15% |
   | F1 score | 0.551 | 0.699 | 0.89 |
