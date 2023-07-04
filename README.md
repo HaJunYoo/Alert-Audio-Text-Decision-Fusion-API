@@ -68,33 +68,17 @@
     | Precision | 93.64% |
     | Recall | 91.98% |
 
+** Multi-Label Classification
 - Labels (robbery', 'sexual', 'regular', 'help', 'violence', 'theft’)
-    | Metric | Performance |    
-    | --- | --- |
-    | Test Accuracy | 59.27% |
-    | F1 score | 0.551 |
-    | Precision | 59.80% |
-    | Recall | 59.30% |
+  - Late Fusion(Audio feature - text feature) with softmax
+    
+  | Metric | Early Fusion | Text Classification(KoBERT) | Late Fusion |
+  |---|---|---|---|
+  | Test Accuracy | 59.27% | 74.72% | 89.15% |
+  | F1 score | 0.551 | 0.699 | 0.89 |
+  | Precision | 59.80% | 84.54% | 91.34% |
+  | Recall | 59.30% | 74.72% | 89.19% |
 
-**Text Classification(KoBERT)(Finetuning)** 
-- Labels (robbery', 'sexual', 'regular', 'help', 'violence', 'theft’)
-- KoBERT Fine-tuning
-    | Metric | Performance |    
-    | --- | --- |
-    | Test Accuracy | 74.72% |
-    | F1 score | 0.699 |
-    | Precision | 84.54% |
-    | Recall | 74.72% |
-
-**Late Fusion(Audio feature - text feature) with softmax Test**
-- Labels (robbery', 'sexual', 'regular', 'help', 'violence', 'theft’)
-- Mean Concatenate - Softmax
-    | Metric | Performance |    
-    | --- | --- |
-    | Test Accuracy | 89.15% |
-    | F1 score | 0.89% |
-    | Precision | 91.34% |
-    | Recall | 89.19% |
 
 <br>
 
